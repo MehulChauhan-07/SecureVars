@@ -1,58 +1,86 @@
-import { useState } from 'react';
-import { useSecrets } from '@/contexts/SecretsContext';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Upload, Download, FileText, FileSpreadsheet, FileCode, Copy, Check } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useSecrets } from "@/contexts/SecretsContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Upload,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  FileCode,
+  Copy,
+  Check,
+  ArrowDownUp
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImportExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultTab?: 'import' | 'export';
+  defaultTab?: "import" | "export";
   selectedSecrets?: string[];
 }
 
 export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
   open,
   onOpenChange,
-  defaultTab = 'export',
-  selectedSecrets = []
+  defaultTab = "export",
+  selectedSecrets = [],
 }) => {
-  const { secrets, importFromEnv, importFromJson, exportToEnv, exportToJson, exportToCsv } = useSecrets();
+  const {
+    secrets,
+    importFromEnv,
+    importFromJson,
+    exportToEnv,
+    exportToJson,
+    exportToCsv,
+  } = useSecrets();
   const { toast } = useToast();
-  
+
   // Import states
-  const [importType, setImportType] = useState<'env' | 'json'>('env');
-  const [importContent, setImportContent] = useState('');
-  const [importProject, setImportProject] = useState('');
-  const [importEnvironment, setImportEnvironment] = useState('development');
-  
+  const [importType, setImportType] = useState<"env" | "json">("env");
+  const [importContent, setImportContent] = useState("");
+  const [importProject, setImportProject] = useState("");
+  const [importEnvironment, setImportEnvironment] = useState("development");
+
   // Export states
-  const [exportType, setExportType] = useState<'env' | 'json' | 'csv'>('env');
-  const [exportEnvironment, setExportEnvironment] = useState<string>('all');
-  const [exportResult, setExportResult] = useState('');
+  const [exportType, setExportType] = useState<"env" | "json" | "csv">("env");
+  const [exportEnvironment, setExportEnvironment] = useState<string>("all");
+  const [exportResult, setExportResult] = useState("");
   const [copied, setCopied] = useState(false);
 
   const handleImport = async () => {
     if (!importContent.trim()) {
       toast({
-        title: 'Error',
-        description: 'Please provide content to import.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please provide content to import.",
+        variant: "destructive",
       });
       return;
     }
 
     try {
       let imported = 0;
-      
-      if (importType === 'env') {
+
+      if (importType === "env") {
         imported = await importFromEnv(
           importContent,
           importProject || undefined,
@@ -64,33 +92,36 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
       }
 
       toast({
-        title: 'Import successful',
+        title: "Import successful",
         description: `Successfully imported ${imported} secret(s).`,
       });
 
-      setImportContent('');
+      setImportContent("");
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Import failed',
-        description: 'Failed to parse or import the provided content.',
-        variant: 'destructive',
+        title: "Import failed",
+        description: "Failed to parse or import the provided content.",
+        variant: "destructive",
       });
     }
   };
 
   const handleExport = () => {
     const secretIds = selectedSecrets.length > 0 ? selectedSecrets : undefined;
-    let result = '';
+    let result = "";
 
     switch (exportType) {
-      case 'env':
-        result = exportToEnv(secretIds, exportEnvironment !== 'all' ? exportEnvironment : undefined);
+      case "env":
+        result = exportToEnv(
+          secretIds,
+          exportEnvironment !== "all" ? exportEnvironment : undefined
+        );
         break;
-      case 'json':
+      case "json":
         result = JSON.stringify(exportToJson(secretIds), null, 2);
         break;
-      case 'csv':
+      case "csv":
         result = exportToCsv(secretIds);
         break;
     }
@@ -104,43 +135,47 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast({
-        title: 'Copied',
-        description: 'Export content copied to clipboard.',
+        title: "Copied",
+        description: "Export content copied to clipboard.",
       });
     } catch (error) {
       toast({
-        title: 'Copy failed',
-        description: 'Failed to copy to clipboard.',
-        variant: 'destructive',
+        title: "Copy failed",
+        description: "Failed to copy to clipboard.",
+        variant: "destructive",
       });
     }
   };
 
   const downloadFile = () => {
-    const extension = exportType === 'env' ? 'env' : exportType;
+    const extension = exportType === "env" ? "env" : exportType;
     const filename = `secrets-export.${extension}`;
-    const blob = new Blob([exportResult], { type: 'text/plain' });
+    const blob = new Blob([exportResult], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     toast({
-      title: 'Download started',
+      title: "Download started",
       description: `Downloading ${filename}...`,
     });
   };
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'env': return <FileCode className="h-4 w-4" />;
-      case 'json': return <FileText className="h-4 w-4" />;
-      case 'csv': return <FileSpreadsheet className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+      case "env":
+        return <FileCode className="h-4 w-4" />;
+      case "json":
+        return <FileText className="h-4 w-4" />;
+      case "csv":
+        return <FileSpreadsheet className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
     }
   };
 
@@ -149,7 +184,8 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Upload className="h-5 w-5" />
+            {/* <Upload className="h-5 w-5" /> */}
+            <ArrowDownUp className="h-5 w-5" />
             <span>Import & Export</span>
           </DialogTitle>
           <DialogDescription>
@@ -160,11 +196,11 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
         <Tabs defaultValue={defaultTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="import" className="flex items-center space-x-2">
-              <Upload className="h-4 w-4" />
+              <Download className="h-4 w-4" />
               <span>Import</span>
             </TabsTrigger>
             <TabsTrigger value="export" className="flex items-center space-x-2">
-              <Download className="h-4 w-4" />
+              <Upload className="h-4 w-4" />
               <span>Export</span>
             </TabsTrigger>
           </TabsList>
@@ -173,7 +209,10 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Import Type</Label>
-                <Select value={importType} onValueChange={(value: any) => setImportType(value)}>
+                <Select
+                  value={importType}
+                  onValueChange={(value: any) => setImportType(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -205,7 +244,10 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
 
               <div className="space-y-2">
                 <Label>Environment</Label>
-                <Select value={importEnvironment} onValueChange={setImportEnvironment}>
+                <Select
+                  value={importEnvironment}
+                  onValueChange={setImportEnvironment}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -225,8 +267,8 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
                 value={importContent}
                 onChange={(e) => setImportContent(e.target.value)}
                 placeholder={
-                  importType === 'env' 
-                    ? 'DATABASE_URL=postgresql://...\nAPI_KEY=your-api-key'
+                  importType === "env"
+                    ? "DATABASE_URL=postgresql://...\nAPI_KEY=your-api-key"
                     : '[{"name": "Database URL", "identifier": "DATABASE_URL", ...}]'
                 }
                 rows={10}
@@ -238,9 +280,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleImport}>
-                Import Secrets
-              </Button>
+              <Button onClick={handleImport}>Import Secrets</Button>
             </div>
           </TabsContent>
 
@@ -248,7 +288,10 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Export Format</Label>
-                <Select value={exportType} onValueChange={(value: any) => setExportType(value)}>
+                <Select
+                  value={exportType}
+                  onValueChange={(value: any) => setExportType(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -277,7 +320,10 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
 
               <div className="space-y-2">
                 <Label>Environment Filter</Label>
-                <Select value={exportEnvironment} onValueChange={setExportEnvironment}>
+                <Select
+                  value={exportEnvironment}
+                  onValueChange={setExportEnvironment}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -294,10 +340,12 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
 
             {selectedSecrets.length > 0 && (
               <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium mb-2">Selected Secrets ({selectedSecrets.length})</p>
+                <p className="text-sm font-medium mb-2">
+                  Selected Secrets ({selectedSecrets.length})
+                </p>
                 <div className="flex flex-wrap gap-1">
                   {selectedSecrets.slice(0, 5).map((id) => {
-                    const secret = secrets.find(s => s.id === id);
+                    const secret = secrets.find((s) => s.id === id);
                     return secret ? (
                       <Badge key={id} variant="secondary" className="text-xs">
                         {secret.name}
@@ -321,8 +369,12 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
               {exportResult && (
                 <div className="flex space-x-2">
                   <Button onClick={copyToClipboard} variant="outline" size="sm">
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                    {copied ? "Copied" : "Copy"}
                   </Button>
                   <Button onClick={downloadFile} size="sm">
                     <Download className="h-4 w-4 mr-2" />
