@@ -5,6 +5,7 @@ import { useState } from "react";
 import { SecretFormDialog } from "@/components/secret/SecretFormDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CommandPalette } from "@/components/secret/CommandPalette";
+// import { CommandPalette } from "../command/CommandPallete";
 import { ModeToggle } from "../shared/ModeToggle";
 
 const Layout = () => {

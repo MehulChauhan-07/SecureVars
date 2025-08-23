@@ -16,7 +16,7 @@ export interface Secret {
     name: string;
     module?: string;
   };
-  environment: 'development' | 'production' | 'testing' | 'staging';
+  environment: "development" | "production" | "testing" | "staging";
   meta: {
     description: string;
     tags: string[];
@@ -30,12 +30,18 @@ export interface Secret {
   };
   history?: SecretHistory[];
 }
+// PATCH: extend SecretsContextType with new fields.
 
 export interface SecretsContextType {
   secrets: Secret[];
   selectedSecrets: string[];
   recentlyAccessed: Secret[];
-  addSecret: (secret: Omit<Secret, 'id' | 'meta'> & { meta: Omit<Secret['meta'], 'createdAt' | 'lastUpdated'> }) => void;
+  allTags: string[]; // NEW
+  addSecret: (
+    secret: Omit<Secret, "id" | "meta"> & {
+      meta: Omit<Secret["meta"], "createdAt" | "lastUpdated">;
+    }
+  ) => void;
   updateSecret: (id: string, secret: Partial<Secret>) => void;
   deleteSecret: (id: string) => void;
   deleteSecrets: (ids: string[]) => void;
@@ -46,15 +52,20 @@ export interface SecretsContextType {
   toggleSelectedSecret: (id: string) => void;
   clearSelectedSecrets: () => void;
   rollbackSecret: (id: string, version: number) => void;
-  importFromEnv: (content: string, project?: string, environment?: string) => Promise<number>;
+  importFromEnv: (
+    content: string,
+    project?: string,
+    environment?: string
+  ) => Promise<number>;
   importFromJson: (data: Secret[]) => Promise<number>;
   exportToEnv: (secretIds?: string[], environment?: string) => string;
   exportToJson: (secretIds?: string[]) => Secret[];
   exportToCsv: (secretIds?: string[]) => string;
   checkDuplicateIdentifier: (identifier: string, excludeId?: string) => boolean;
+  updateSecretTags: (id: string, tags: string[]) => void; // NEW
 }
 
-export type Environment = 'development' | 'production' | 'testing' | 'staging';
+export type Environment = "development" | "production" | "testing" | "staging";
 
 export interface ProjectSummary {
   name: string;
@@ -63,7 +74,7 @@ export interface ProjectSummary {
 }
 
 export interface ExportFormat {
-  format: 'env' | 'json' | 'csv';
+  format: "env" | "json" | "csv";
   filename: string;
   content: string;
 }

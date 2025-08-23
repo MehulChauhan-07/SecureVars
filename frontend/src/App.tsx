@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import SecretsList from "@/pages/SecretsList";
 import SecretDetail from "@/pages/SecretDetail";
 import NotFound from "./pages/NotFound";
+import EnvCompare from "./pages/EnvCompare";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
                 <Route index element={<Dashboard />} />
                 <Route path="secrets" element={<SecretsList />} />
                 <Route path="secrets/:id" element={<SecretDetail />} />
+                <Route path="compare" element={<EnvCompare />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,0 +1,1 @@
+import dotenv from "dotenv"; dotenv.config(); console.log("Before:", process.env.MASTER_PASSWORD_HASH); delete process.env.MASTER_PASSWORD_HASH; console.log("After:", process.env.MASTER_PASSWORD_HASH); console.log("Master password reset successful!");

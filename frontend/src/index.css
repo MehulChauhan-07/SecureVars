@@ -123,3 +123,37 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* PATCH: Add sensitive value masking styles */
+
+.sensitive-blur {
+  position: relative;
+  color: transparent;
+}
+
+.sensitive-blur::after {
+  content: attr(data-mask) "";
+}
+
+.sensitive-blur {
+  background: linear-gradient(90deg, var(--muted) 30%, var(--background) 70%);
+  filter: blur(4px);
+  transition: filter 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+}
+
+.sensitive-blur:hover,
+.sensitive-blur:focus-within {
+  filter: blur(2px);
+}
+
+.sensitive-revealed {
+  transition: filter 0.25s ease;
+  filter: none;
+}
+
+/* Dark mode emphasis: add subtle inset highlight */
+.dark .sensitive-blur,
+.dark .sensitive-revealed {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+}
