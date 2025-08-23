@@ -136,6 +136,26 @@ export const createSecret = catchAsync(async (req, res, next) => {
       isActive: meta?.isActive !== undefined ? meta.isActive : true,
       isFavorite: meta?.isFavorite || false,
       version: 1,
+      // New fields
+      category: meta?.category || "",
+      priority: meta?.priority || "medium",
+      strength: meta?.strength || "moderate",
+      rotationReminder: {
+        enabled: meta?.rotationReminder?.enabled || false,
+        intervalDays: meta?.rotationReminder?.intervalDays || 90,
+        lastRotated: meta?.rotationReminder?.lastRotated
+          ? new Date(meta.rotationReminder.lastRotated)
+          : new Date(),
+        nextDue: meta?.rotationReminder?.nextDue
+          ? new Date(meta.rotationReminder.nextDue)
+          : null,
+      },
+      personalNotes: meta?.personalNotes || "",
+      quickCopyFormat: meta?.quickCopyFormat || "env",
+      usagePattern: {
+        frequency: meta?.usagePattern?.frequency || "",
+        lastUsedInProject: meta?.usagePattern?.lastUsedInProject || "",
+      },
     },
   });
 
@@ -225,12 +245,52 @@ export const updateSecret = catchAsync(async (req, res, next) => {
   if (environment) secret.environment = environment;
 
   // Update meta fields
+  // In updateSecret controller
+  // Update meta fields
   if (meta) {
     if (meta.description !== undefined)
       secret.meta.description = meta.description;
     if (meta.tags) secret.meta.tags = meta.tags;
     if (meta.isActive !== undefined) secret.meta.isActive = meta.isActive;
     if (meta.isFavorite !== undefined) secret.meta.isFavorite = meta.isFavorite;
+
+    // New fields
+    if (meta.category !== undefined) secret.meta.category = meta.category;
+    if (meta.priority !== undefined) secret.meta.priority = meta.priority;
+    if (meta.strength !== undefined) secret.meta.strength = meta.strength;
+
+    // Handle rotationReminder object
+    if (meta.rotationReminder) {
+      secret.meta.rotationReminder = secret.meta.rotationReminder || {};
+      if (meta.rotationReminder.enabled !== undefined)
+        secret.meta.rotationReminder.enabled = meta.rotationReminder.enabled;
+      if (meta.rotationReminder.intervalDays !== undefined)
+        secret.meta.rotationReminder.intervalDays =
+          meta.rotationReminder.intervalDays;
+      if (meta.rotationReminder.lastRotated !== undefined)
+        secret.meta.rotationReminder.lastRotated = new Date(
+          meta.rotationReminder.lastRotated
+        );
+      if (meta.rotationReminder.nextDue !== undefined)
+        secret.meta.rotationReminder.nextDue = new Date(
+          meta.rotationReminder.nextDue
+        );
+    }
+
+    if (meta.personalNotes !== undefined)
+      secret.meta.personalNotes = meta.personalNotes;
+    if (meta.quickCopyFormat !== undefined)
+      secret.meta.quickCopyFormat = meta.quickCopyFormat;
+
+    // Handle usagePattern object
+    if (meta.usagePattern) {
+      secret.meta.usagePattern = secret.meta.usagePattern || {};
+      if (meta.usagePattern.frequency !== undefined)
+        secret.meta.usagePattern.frequency = meta.usagePattern.frequency;
+      if (meta.usagePattern.lastUsedInProject !== undefined)
+        secret.meta.usagePattern.lastUsedInProject =
+          meta.usagePattern.lastUsedInProject;
+    }
   }
 
   // If value is provided, update it and create history entry

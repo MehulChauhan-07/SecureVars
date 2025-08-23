@@ -1,8 +1,11 @@
 import { Schema, model } from "mongoose";
 import { encryptValue, decryptValue } from "../utils/encryption.js";
 
+// backend/src/models/secret.model.js - Updated Schema
+
 const SecretSchema = new Schema(
   {
+    // Existing fields remain the same...
     name: {
       type: String,
       required: [true, "A secret must have a name"],
@@ -18,24 +21,15 @@ const SecretSchema = new Schema(
       type: String,
       required: [true, "A secret must have a value"],
     },
-    iv: {
-      type: String,
-      required: true,
-    },
-    authTag: {
-      type: String,
-      required: true,
-    },
+    iv: { type: String, required: true },
+    authTag: { type: String, required: true },
     project: {
       name: {
         type: String,
         required: [true, "A secret must belong to a project"],
       },
       module: String,
-      _id: {
-        type: Schema.Types.ObjectId,
-        ref: "Project",
-      },
+      _id: { type: Schema.Types.ObjectId, ref: "Project" },
     },
     environment: {
       type: String,
@@ -45,30 +39,41 @@ const SecretSchema = new Schema(
     meta: {
       description: String,
       tags: [String],
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-      lastUpdated: {
-        type: Date,
-        default: Date.now,
-      },
-      isActive: {
-        type: Boolean,
-        default: true,
-      },
-      isFavorite: {
-        type: Boolean,
-        default: false,
-      },
+      createdAt: { type: Date, default: Date.now },
+      lastUpdated: { type: Date, default: Date.now },
+      isActive: { type: Boolean, default: true },
+      isFavorite: { type: Boolean, default: false },
       lastAccessed: Date,
-      accessCount: {
-        type: Number,
-        default: 0,
+      accessCount: { type: Number, default: 0 },
+      version: { type: Number, default: 1 },
+
+      // New fields to add
+      category: String,
+      priority: {
+        type: String,
+        enum: ["low", "medium", "high", "critical"],
+        default: "medium",
       },
-      version: {
-        type: Number,
-        default: 1,
+      strength: {
+        type: String,
+        enum: ["weak", "moderate", "strong", "very-strong"],
+        default: "moderate",
+      },
+      rotationReminder: {
+        enabled: { type: Boolean, default: false },
+        intervalDays: { type: Number, default: 90 },
+        lastRotated: Date,
+        nextDue: Date,
+      },
+      personalNotes: String,
+      quickCopyFormat: {
+        type: String,
+        enum: ["env", "json", "yaml", "dotnet", "docker"],
+        default: "env",
+      },
+      usagePattern: {
+        frequency: String,
+        lastUsedInProject: String,
       },
     },
   },
@@ -100,21 +105,29 @@ SecretSchema.virtual("value").get(function () {
   }
 });
 
-// Middleware to encrypt value before saving
-SecretSchema.pre("save", function (next) {
-  if (!this.isModified("value")) return next();
-
+// Encrypt before validation so required encrypted fields exist for validators
+SecretSchema.pre("validate", function (next) {
   try {
+    // Auto-calc rotation nextDue if enabled and not set
+    if (
+      this.meta?.rotationReminder?.enabled &&
+      !this.meta.rotationReminder.nextDue
+    ) {
+      const lastRotated = this.meta.rotationReminder.lastRotated || new Date();
+      const intervalDays = this.meta.rotationReminder.intervalDays || 90;
+      this.meta.rotationReminder.nextDue = new Date(
+        lastRotated.getTime() + intervalDays * 24 * 60 * 60 * 1000
+      );
+    }
+
+    if (this._value === undefined) return next();
     const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
     const encryptedData = encryptValue(this._value, encryptionKey);
-
     this.encryptedValue = encryptedData.encrypted;
     this.iv = encryptedData.iv;
     this.authTag = encryptedData.authTag;
-
-    // Update lastUpdated timestamp
     this.meta.lastUpdated = Date.now();
-
+    this._value = undefined; // clear plaintext sentinel
     next();
   } catch (error) {
     next(error);
@@ -123,7 +136,7 @@ SecretSchema.pre("save", function (next) {
 
 // Set value through a custom setter
 SecretSchema.methods.setValue = function (value) {
-  this._value = value;
+  this._value = value; // marks for encryption on save
 };
 
 // Access tracking method

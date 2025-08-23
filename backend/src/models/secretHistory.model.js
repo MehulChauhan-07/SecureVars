@@ -52,18 +52,16 @@ SecretHistorySchema.virtual("value").get(function () {
   }
 });
 
-// Middleware to encrypt value before saving
-SecretHistorySchema.pre("save", function (next) {
-  if (!this.isModified("value")) return next();
-
+// Encrypt before validation to satisfy required encrypted field validators
+SecretHistorySchema.pre("validate", function (next) {
+  if (this._value === undefined) return next();
   try {
     const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
     const encryptedData = encryptValue(this._value, encryptionKey);
-
     this.encryptedValue = encryptedData.encrypted;
     this.iv = encryptedData.iv;
     this.authTag = encryptedData.authTag;
-
+    this._value = undefined;
     next();
   } catch (error) {
     next(error);
