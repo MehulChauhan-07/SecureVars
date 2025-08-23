@@ -7,6 +7,8 @@ import {
   comparePassword,
   generateSecureToken,
 } from "../utils/encryption.js";
+import fs from "fs/promises";
+import path from "path";
 
 // Initialize master password
 export const initializeMasterPassword = catchAsync(async (req, res, next) => {
@@ -39,6 +41,33 @@ export const initializeMasterPassword = catchAsync(async (req, res, next) => {
   // In a real implementation, we would save this to a secure storage
   // For this demo, we'll just set it to an environment variable
   process.env.MASTER_PASSWORD_HASH = hashedPassword;
+
+  // Persist the hash into the .env file so it survives restarts
+  try {
+    const envPath = path.resolve(process.cwd(), ".env");
+    let envContent = "";
+    try {
+      envContent = await fs.readFile(envPath, "utf8");
+    } catch (readErr) {
+      // If file does not exist we will create it
+      envContent = "";
+    }
+    if (/^MASTER_PASSWORD_HASH=/m.test(envContent)) {
+      envContent = envContent.replace(
+        /^MASTER_PASSWORD_HASH=.*$/m,
+        `MASTER_PASSWORD_HASH=${hashedPassword}`
+      );
+    } else {
+      if (!envContent.endsWith("\n")) envContent += "\n";
+      envContent += `MASTER_PASSWORD_HASH=${hashedPassword}\n`;
+    }
+    await fs.writeFile(envPath, envContent, "utf8");
+    logger.info("Persisted master password hash to .env file");
+  } catch (persistErr) {
+    logger.warn(
+      `Could not persist master password hash to .env: ${persistErr.message}`
+    );
+  }
 
   logger.info("Master password has been initialized");
 

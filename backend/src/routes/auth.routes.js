@@ -1,6 +1,18 @@
 import { Router } from "express";
-import { initializeMasterPassword, authenticate, refreshToken, logout, checkToken, changeMasterPassword } from "../controllers/auth.controller.js";
-import { verifyMasterPassword, protectWithAccessToken } from "../middleware/masterAuth.middleware.js";
+import {
+  initializeMasterPassword,
+  authenticate,
+  refreshToken,
+  logout,
+  checkToken,
+  changeMasterPassword,
+} from "../controllers/auth.controller.js";
+import AppError from "../utils/appError.js";
+import logger from "../utils/logger.js";
+import {
+  verifyMasterPassword,
+  protectWithAccessToken,
+} from "../middleware/masterAuth.middleware.js";
 import rateLimit from "express-rate-limit";
 
 const router = Router();
@@ -15,7 +27,15 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.route("/initialize").post(initializeMasterPassword);
+// Block initialize route if already initialized
+const blockIfInitialized = (req, res, next) => {
+  if (process.env.MASTER_PASSWORD_HASH) {
+    return next(new AppError("System already initialized", 400));
+  }
+  next();
+};
+
+router.route("/initialize").post(blockIfInitialized, initializeMasterPassword);
 
 router.route("/login").post(authLimiter, authenticate);
 

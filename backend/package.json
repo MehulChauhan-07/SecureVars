@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./app/index.js",
-    "dev": "nodemon ./app/index.js"
+  "dev": "nodemon ./app/index.js",
+  "gen": "node ./scripts/genMasterHash.js"
   },
   "keywords": [],
   "author": "",
