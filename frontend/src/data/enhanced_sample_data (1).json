@@ -1,0 +1,33 @@
+{
+  "name": "MongoDB Connection String",
+  "identifier": "MONGODB_URI",
+  "value": "mongodb+srv://user:password@cluster.mongodb.net/taktix?retryWrites=true&w=majority",
+    "project": {
+      "name": "Taktix Backend",
+      "module": "Database"
+    },  
+  "environment": "production",
+  "meta": {
+    "description": "Main MongoDB Atlas connection string for production database",
+    "tags": ["database", "mongodb", "atlas", "production"],
+    "category": "database",
+    "priority": "critical",
+    "isFavorite": true,
+    "isActive": true,
+    "createdAt": new Date("2024-01-15"),
+    "lastUpdated": new Date("2024-02-01"),
+    "strength": "strong",
+    "rotationReminder": {
+      "enabled": true,
+      "intervalDays": 90,
+      "lastRotated": "2024-01-15",
+      "nextDue": "2024-04-15"
+    },
+    "personalNotes": "Remember to update connection string in Docker compose when rotating",
+    "quickCopyFormat": "env",
+    "usagePattern": {
+      "frequency": "daily",
+      "lastUsedInProject": "Taktix Backend"
+    }
+  }
+}
