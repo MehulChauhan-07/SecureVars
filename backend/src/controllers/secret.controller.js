@@ -18,6 +18,31 @@ export const getAllSecrets = catchAsync(async (req, res, next) => {
     filter.environment = req.query.environment;
   }
 
+   if (req.query.category) {
+     filter["meta.category"] = req.query.category;
+   }
+
+   if (req.query.priority) {
+     filter["meta.priority"] = req.query.priority;
+   }
+
+   if (req.query.strength) {
+     filter["meta.strength"] = req.query.strength;
+   }
+
+   if (req.query.rotationEnabled) {
+     filter["meta.rotationReminder.enabled"] =
+       req.query.rotationEnabled === "true";
+   }
+
+   if (req.query.rotationDue) {
+     // Find secrets due for rotation before specified date
+     filter["meta.rotationReminder.nextDue"] = {
+       $lte: new Date(req.query.rotationDue),
+     };
+   }
+  
+  
   // Filter by tag
   if (req.query.tag) {
     filter["meta.tags"] = req.query.tag;
