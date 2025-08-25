@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useSecrets } from "@/contexts/SecretsContext";
 
@@ -33,7 +34,7 @@ interface Template {
   id: string;
   name: string;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   category: string;
   fields: TemplateField[];
 }
@@ -134,6 +135,9 @@ export function SecretTemplates() {
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Secret Templates</DialogTitle>
+          <DialogDescription>
+            Select a template to quickly add common secrets
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">

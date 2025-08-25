@@ -1,47 +1,54 @@
-import { useSecrets } from '@/contexts/SecretsContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Database, Shield, Activity, Clock, Search, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useState, useMemo } from 'react';
-import { Secret } from '@/types/secret';
+import { useSecrets } from "@/contexts/SecretsContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Database, Shield, Activity, Clock, Search, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { Secret } from "@/types/secret";
 
 const Dashboard = () => {
-  const { secrets, recentlyAccessed } = useSecrets();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { secrets, recentlyAccessed, isLoading, error } = useSecrets();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const stats = useMemo(() => {
-    const active = secrets.filter(s => s.meta.isActive).length;
+    const active = secrets.filter((s) => s.meta.isActive).length;
     const byEnvironment = secrets.reduce((acc, secret) => {
       acc[secret.environment] = (acc[secret.environment] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
-    const projects = [...new Set(secrets.map(s => s.project.name))].length;
-    
+
+    const projects = [...new Set(secrets.map((s) => s.project.name))].length;
+
     return { total: secrets.length, active, byEnvironment, projects };
   }, [secrets]);
 
   const filteredSecrets = useMemo(() => {
     return secrets
-      .filter(secret => 
-        secret.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        secret.identifier.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        secret.project.name.toLowerCase().includes(searchQuery.toLowerCase())
+      .filter(
+        (secret) =>
+          secret.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          secret.identifier.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          secret.project.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
       .slice(0, 5);
   }, [secrets, searchQuery]);
 
   const getEnvironmentColor = (env: string) => {
     const colors = {
-      development: 'bg-env-development',
-      production: 'bg-env-production',
-      testing: 'bg-env-testing',
-      staging: 'bg-env-staging'
+      development: "bg-env-development",
+      production: "bg-env-production",
+      testing: "bg-env-testing",
+      staging: "bg-env-staging",
     };
-    return colors[env as keyof typeof colors] || 'bg-gray-500';
+    return colors[env as keyof typeof colors] || "bg-gray-500";
   };
 
   return (
@@ -62,10 +69,19 @@ const Dashboard = () => {
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.active} active
-            </p>
+            {isLoading ? (
+              <div className="space-y-2">
+                <div className="h-7 w-16 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.active} active
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -75,10 +91,19 @@ const Dashboard = () => {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.projects}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all environments
-            </p>
+            {isLoading ? (
+              <div className="space-y-2">
+                <div className="h-7 w-12 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-28 bg-muted animate-pulse rounded" />
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.projects}</div>
+                <p className="text-xs text-muted-foreground">
+                  Across all environments
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -88,10 +113,21 @@ const Dashboard = () => {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.byEnvironment.production || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Production secrets
-            </p>
+            {isLoading ? (
+              <div className="space-y-2">
+                <div className="h-7 w-10 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {stats.byEnvironment.production || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Production secrets
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -101,10 +137,21 @@ const Dashboard = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.byEnvironment.development || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Development secrets
-            </p>
+            {isLoading ? (
+              <div className="space-y-2">
+                <div className="h-7 w-10 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-28 bg-muted animate-pulse rounded" />
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {stats.byEnvironment.development || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Development secrets
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -129,7 +176,7 @@ const Dashboard = () => {
                 className="pl-10"
               />
             </div>
-            
+
             {searchQuery && (
               <div className="space-y-2">
                 {filteredSecrets.length > 0 ? (
@@ -140,10 +187,14 @@ const Dashboard = () => {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-sm truncate">{secret.name}</span>
+                          <span className="font-medium text-sm truncate">
+                            {secret.name}
+                          </span>
                           <Badge
                             variant="secondary"
-                            className={`text-white text-xs ${getEnvironmentColor(secret.environment)}`}
+                            className={`text-white text-xs ${getEnvironmentColor(
+                              secret.environment
+                            )}`}
                           >
                             {secret.environment}
                           </Badge>
@@ -173,16 +224,30 @@ const Dashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle>Recently Accessed</CardTitle>
-            <CardDescription>
-              Your most recently viewed secrets
-            </CardDescription>
+            <CardDescription>Your most recently viewed secrets</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentlyAccessed.length > 0 ? (
+            {isLoading ? (
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-5 w-full bg-muted animate-pulse rounded"
+                  />
+                ))}
+              </div>
+            ) : recentlyAccessed.length > 0 ? (
               recentlyAccessed.map((secret) => (
-                <div key={secret.id} className="flex items-center justify-between">
+                <div
+                  key={secret.id}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${getEnvironmentColor(secret.environment)}`} />
+                    <div
+                      className={`w-3 h-3 rounded-full ${getEnvironmentColor(
+                        secret.environment
+                      )}`}
+                    />
                     <span className="text-sm truncate">{secret.name}</span>
                   </div>
                   <Button asChild variant="ghost" size="sm">
@@ -193,7 +258,38 @@ const Dashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No recently accessed secrets</p>
+              <p className="text-sm text-muted-foreground">
+                No recently accessed secrets
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        {/* Env distribution stub */}
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Environment Distribution</CardTitle>
+            <CardDescription>Secrets per environment</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-24 w-full bg-muted animate-pulse rounded" />
+            ) : (
+              <div className="flex items-end gap-4 h-28">
+                {Object.entries(stats.byEnvironment).map(([env, count]) => (
+                  <div key={env} className="flex flex-col items-center">
+                    <div
+                      className={`w-8 ${getEnvironmentColor(env)} rounded-t`}
+                      style={{
+                        height: Math.max(6, Math.min(24, Number(count))) * 4,
+                      }}
+                    />
+                    <span className="text-xs mt-1 capitalize">{env}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

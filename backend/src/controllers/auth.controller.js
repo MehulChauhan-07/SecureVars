@@ -9,6 +9,16 @@ import {
 } from "../utils/encryption.js";
 import fs from "fs/promises";
 import path from "path";
+import { randomBytes } from "crypto";
+
+// Public: Check if system is initialized
+export const getInitializationStatus = catchAsync(async (req, res) => {
+  const initialized = Boolean(process.env.MASTER_PASSWORD_HASH);
+  res.status(200).json({
+    status: "success",
+    data: { initialized },
+  });
+});
 
 // Initialize master password
 export const initializeMasterPassword = catchAsync(async (req, res, next) => {
@@ -61,6 +71,21 @@ export const initializeMasterPassword = catchAsync(async (req, res, next) => {
       if (!envContent.endsWith("\n")) envContent += "\n";
       envContent += `MASTER_PASSWORD_HASH=${hashedPassword}\n`;
     }
+
+    // Ensure ENCRYPTION_KEY exists (32 bytes hex)
+    if (!/^ENCRYPTION_KEY=/m.test(envContent)) {
+      const encryptionKey = randomBytes(32).toString("hex");
+      envContent += `ENCRYPTION_KEY=${encryptionKey}\n`;
+      process.env.ENCRYPTION_KEY = encryptionKey;
+    }
+
+    // Ensure JWT_SECRET exists
+    if (!/^JWT_SECRET=/m.test(envContent)) {
+      const jwtSecret = randomBytes(32).toString("hex");
+      envContent += `JWT_SECRET=${jwtSecret}\n`;
+      process.env.JWT_SECRET = jwtSecret;
+    }
+
     await fs.writeFile(envPath, envContent, "utf8");
     logger.info("Persisted master password hash to .env file");
   } catch (persistErr) {

@@ -23,20 +23,42 @@ import {
   Shield,
   Activity,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SecretFormDialog } from "@/components/secret/SecretFormDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const SecretDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { secrets, deleteSecret, toggleSecretStatus, toggleFavorite } =
-    useSecrets();
+  const {
+    secrets,
+    deleteSecret,
+    toggleSecretStatus,
+    toggleFavorite,
+    fetchSecretValue,
+  } = useSecrets();
   const { toast } = useToast();
   const [showValue, setShowValue] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [loadedValue, setLoadedValue] = useState<string | null>(null);
 
   const secret = secrets.find((s) => s.id === id);
+
+  const rotationStatus = useMemo(() => {
+    const rr = secret?.meta.rotationReminder;
+    if (!rr?.enabled || !rr.nextDue)
+      return { label: "OK", cls: "bg-green-600 text-white" };
+    const now = Date.now();
+    const next = new Date(rr.nextDue).getTime();
+    const diffDays = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { label: "Overdue", cls: "bg-red-600 text-white" };
+    if (diffDays <= 7)
+      return { label: "Due Soon", cls: "bg-amber-600 text-white" };
+    return { label: "OK", cls: "bg-green-600 text-white" };
+  }, [secret?.meta.rotationReminder]);
+
+  const isLongNotes = (secret?.meta.personalNotes?.length || 0) > 500;
+  const [showNotes, setShowNotes] = useState(!isLongNotes);
 
   if (!secret) {
     return (
@@ -160,7 +182,7 @@ const SecretDetail = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={secret.meta.isFavorite ? "default" : "outline"}
             size="icon"
@@ -211,7 +233,7 @@ const SecretDetail = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Identifier</label>
               <div className="flex items-center space-x-2">
-                <code className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm">
+                <code className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm break-all">
                   {secret.identifier}
                 </code>
                 <Button
@@ -231,13 +253,19 @@ const SecretDetail = () => {
               <div className="flex items-center space-x-2">
                 <code className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm break-all">
                   {showValue
-                    ? secret.value
+                    ? loadedValue ?? secret.value ?? ""
                     : "••••••••••••••••••••••••••••••••"}
                 </code>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowValue(!showValue)}
+                  onClick={async () => {
+                    if (!showValue && !secret.value && !loadedValue) {
+                      const v = await fetchSecretValue(secret.id);
+                      setLoadedValue(v);
+                    }
+                    setShowValue(!showValue);
+                  }}
                 >
                   {showValue ? (
                     <EyeOff className="h-4 w-4" />
@@ -355,6 +383,12 @@ const SecretDetail = () => {
                   <p>
                     Interval: {secret.meta.rotationReminder.intervalDays} days
                   </p>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>Status:</span>
+                    <Badge className={`text-xs ${rotationStatus.cls}`}>
+                      {rotationStatus.label}
+                    </Badge>
+                  </div>
                   {secret.meta.rotationReminder.lastRotated && (
                     <p>
                       Last:{" "}
@@ -421,21 +455,32 @@ const SecretDetail = () => {
         </Card>
       </div>
 
-      {secret.meta.personalNotes && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Notes</CardTitle>
-            <CardDescription>
-              Private notes about handling this secret
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">
-              {secret.meta.personalNotes}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {secret.meta.personalNotes &&
+        (showNotes ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Notes</CardTitle>
+              <CardDescription>
+                Private notes about handling this secret
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {secret.meta.personalNotes}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowNotes(true)}
+            >
+              Show personal notes
+            </Button>
+          </div>
+        ))}
 
       {/* Edit Dialog */}
       <SecretFormDialog

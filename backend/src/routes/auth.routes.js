@@ -6,6 +6,7 @@ import {
   logout,
   checkToken,
   changeMasterPassword,
+  getInitializationStatus,
 } from "../controllers/auth.controller.js";
 import AppError from "../utils/appError.js";
 import logger from "../utils/logger.js";
@@ -35,6 +36,8 @@ const blockIfInitialized = (req, res, next) => {
   next();
 };
 
+// Public routes
+router.route("/status").get(getInitializationStatus);
 router.route("/initialize").post(blockIfInitialized, initializeMasterPassword);
 
 router.route("/login").post(authLimiter, authenticate);

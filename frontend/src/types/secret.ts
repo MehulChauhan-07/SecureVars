@@ -53,6 +53,7 @@ export interface SecretsContextType {
   selectedSecrets: string[];
   recentlyAccessed: Secret[];
   allTags: string[]; // NEW
+  fetchSecretValue: (id: string) => Promise<string>;
   addSecret: (
     secret: Omit<Secret, "id" | "meta"> & {
       meta: Omit<Secret["meta"], "createdAt" | "lastUpdated">;

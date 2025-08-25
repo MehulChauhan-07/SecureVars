@@ -219,7 +219,24 @@ export const importFromJson = catchAsync(async (req, res, next) => {
 });
 
 export const exportToEnv = catchAsync(async (req, res, next) => {
-  const { secretIds, environment } = req.body;
+  if (!process.env.ENCRYPTION_KEY) {
+    return next(
+      new AppError(
+        "Decryption key not configured. Set ENCRYPTION_KEY in the backend environment.",
+        500
+      )
+    );
+  }
+  const source = req.method === "GET" ? req.query : req.body;
+  let { secretIds, environment } = source || {};
+
+  // Normalize secretIds from comma-separated string or array
+  if (typeof secretIds === "string") {
+    secretIds = secretIds
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
 
   let filter = {};
 
@@ -259,7 +276,22 @@ export const exportToEnv = catchAsync(async (req, res, next) => {
 });
 
 export const exportToJson = catchAsync(async (req, res, next) => {
-  const { secretIds, environment } = req.body;
+  if (!process.env.ENCRYPTION_KEY) {
+    return next(
+      new AppError(
+        "Decryption key not configured. Set ENCRYPTION_KEY in the backend environment.",
+        500
+      )
+    );
+  }
+  const source = req.method === "GET" ? req.query : req.body;
+  let { secretIds, environment } = source || {};
+  if (typeof secretIds === "string") {
+    secretIds = secretIds
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
 
   let filter = {};
 
@@ -307,7 +339,22 @@ export const exportToJson = catchAsync(async (req, res, next) => {
 });
 
 export const exportToCsv = catchAsync(async (req, res, next) => {
-  const { secretIds, environment } = req.body;
+  if (!process.env.ENCRYPTION_KEY) {
+    return next(
+      new AppError(
+        "Decryption key not configured. Set ENCRYPTION_KEY in the backend environment.",
+        500
+      )
+    );
+  }
+  const source = req.method === "GET" ? req.query : req.body;
+  let { secretIds, environment } = source || {};
+  if (typeof secretIds === "string") {
+    secretIds = secretIds
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
 
   let filter = {};
 

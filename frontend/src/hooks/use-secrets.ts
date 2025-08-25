@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { SecretsContext } from "./secrets-context";
+import { SecretsContext } from "@/contexts/secrets-context";
 
 export const useSecrets = () => {
   const context = useContext(SecretsContext);

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSecrets } from "@/contexts/SecretsContext";
+import { useSearchParams } from "react-router-dom";
+import { useSecrets } from "@/hooks/use-secrets";
 import {
   Card,
   CardContent,
@@ -62,7 +63,15 @@ import { SecretHistoryDialog } from "@/components/secret/SecretHistoryDialog";
 import { CopyFormatsDialog } from "@/components/secret/CopyFormatsDialog";
 import { useToast } from "@/hooks/use-toast";
 
+const ENV_COLORS: Record<string, string> = {
+  development: "bg-env-development",
+  production: "bg-env-production",
+  testing: "bg-env-testing",
+  staging: "bg-env-staging",
+};
+
 const SecretsList = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     secrets,
     deleteSecret,
@@ -76,6 +85,7 @@ const SecretsList = () => {
   } = useSecrets();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [environmentFilter, setEnvironmentFilter] = useState<string>("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -86,6 +96,58 @@ const SecretsList = () => {
   const [showCopyFormats, setShowCopyFormats] = useState(false);
   const [historySecret, setHistorySecret] = useState<Secret | null>(null);
   const [copySecret, setCopySecret] = useState<Secret | null>(null);
+
+  // Optimistic UI overrides
+  const [favoriteOverride, setFavoriteOverride] = useState<
+    Record<string, boolean | undefined>
+  >({});
+  const [activeOverride, setActiveOverride] = useState<
+    Record<string, boolean | undefined>
+  >({});
+
+  const getIsFavorite = (s: Secret) =>
+    favoriteOverride[s.id] ?? s.meta.isFavorite ?? false;
+  const getIsActive = (s: Secret) =>
+    activeOverride[s.id] ?? s.meta.isActive ?? false;
+
+  // Initialize filters from URL params on mount
+  useEffect(() => {
+    const q = searchParams.get("q");
+    const env = searchParams.get("env");
+    const proj = searchParams.get("project");
+    const status = searchParams.get("status");
+    const fav = searchParams.get("fav");
+    if (q !== null) setSearchQuery(q);
+    if (env) setEnvironmentFilter(env);
+    if (proj) setProjectFilter(proj);
+    if (status) setStatusFilter(status);
+    if (fav) setFavoriteFilter(fav);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync state to URL params
+  useEffect(() => {
+    const params: Record<string, string> = {};
+    if (searchQuery) params.q = searchQuery;
+    if (environmentFilter !== "all") params.env = environmentFilter;
+    if (projectFilter !== "all") params.project = projectFilter;
+    if (statusFilter !== "all") params.status = statusFilter;
+    if (favoriteFilter !== "all") params.fav = favoriteFilter;
+    setSearchParams(params, { replace: true });
+  }, [
+    searchQuery,
+    environmentFilter,
+    projectFilter,
+    statusFilter,
+    favoriteFilter,
+    setSearchParams,
+  ]);
+
+  // Debounce search input
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -128,16 +190,18 @@ const SecretsList = () => {
     return secrets
       .filter((secret) => {
         const matchesSearch =
-          secret.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          secret.identifier.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          secret.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+          secret.identifier
+            .toLowerCase()
+            .includes(debouncedQuery.toLowerCase()) ||
           secret.project.name
             .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
+            .includes(debouncedQuery.toLowerCase()) ||
           secret.meta.description
             .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
+            .includes(debouncedQuery.toLowerCase()) ||
           secret.meta.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase())
+            tag.toLowerCase().includes(debouncedQuery.toLowerCase())
           );
 
         const matchesEnvironment =
@@ -147,12 +211,12 @@ const SecretsList = () => {
           projectFilter === "all" || secret.project.name === projectFilter;
         const matchesStatus =
           statusFilter === "all" ||
-          (statusFilter === "active" && secret.meta.isActive) ||
-          (statusFilter === "inactive" && !secret.meta.isActive);
+          (statusFilter === "active" && getIsActive(secret)) ||
+          (statusFilter === "inactive" && !getIsActive(secret));
         const matchesFavorite =
           favoriteFilter === "all" ||
-          (favoriteFilter === "favorites" && secret.meta.isFavorite) ||
-          (favoriteFilter === "non-favorites" && !secret.meta.isFavorite);
+          (favoriteFilter === "favorites" && getIsFavorite(secret)) ||
+          (favoriteFilter === "non-favorites" && !getIsFavorite(secret));
 
         return (
           matchesSearch &&
@@ -164,28 +228,24 @@ const SecretsList = () => {
       })
       .sort((a, b) => {
         // Sort by favorites first, then by last updated
-        if (a.meta.isFavorite && !b.meta.isFavorite) return -1;
-        if (!a.meta.isFavorite && b.meta.isFavorite) return 1;
+        const aFav = getIsFavorite(a);
+        const bFav = getIsFavorite(b);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
         return b.meta.lastUpdated.getTime() - a.meta.lastUpdated.getTime();
       });
   }, [
     secrets,
-    searchQuery,
+    debouncedQuery,
     environmentFilter,
     projectFilter,
     statusFilter,
     favoriteFilter,
+    favoriteOverride,
+    activeOverride,
   ]);
 
-  const getEnvironmentColor = (env: string) => {
-    const colors = {
-      development: "bg-env-development",
-      production: "bg-env-production",
-      testing: "bg-env-testing",
-      staging: "bg-env-staging",
-    };
-    return colors[env as keyof typeof colors] || "bg-gray-500";
-  };
+  const getEnvironmentColor = (env: string) => ENV_COLORS[env] || "bg-gray-500";
 
   const handleDelete = (secret: Secret) => {
     if (window.confirm(`Are you sure you want to delete "${secret.name}"?`)) {
@@ -197,26 +257,46 @@ const SecretsList = () => {
     }
   };
 
-  const handleToggleStatus = (secret: Secret) => {
-    toggleSecretStatus(secret.id);
-    toast({
-      title: secret.meta.isActive ? "Secret deactivated" : "Secret activated",
-      description: `${secret.name} is now ${
-        secret.meta.isActive ? "inactive" : "active"
-      }.`,
-    });
+  const handleToggleStatus = async (secret: Secret) => {
+    const prev = getIsActive(secret);
+    setActiveOverride((m) => ({ ...m, [secret.id]: !prev }));
+    try {
+      await toggleSecretStatus(secret.id);
+      setActiveOverride((m) => ({ ...m, [secret.id]: undefined }));
+      toast({
+        title: prev ? "Secret deactivated" : "Secret activated",
+        description: `${secret.name} is now ${prev ? "inactive" : "active"}.`,
+      });
+    } catch (err) {
+      setActiveOverride((m) => ({ ...m, [secret.id]: prev }));
+      toast({
+        title: "Failed to update status",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleToggleFavorite = (secret: Secret) => {
-    toggleFavorite(secret.id);
-    toast({
-      title: secret.meta.isFavorite
-        ? "Removed from favorites"
-        : "Added to favorites",
-      description: `${secret.name} has been ${
-        secret.meta.isFavorite ? "removed from" : "added to"
-      } favorites.`,
-    });
+  const handleToggleFavorite = async (secret: Secret) => {
+    const prev = getIsFavorite(secret);
+    setFavoriteOverride((m) => ({ ...m, [secret.id]: !prev }));
+    try {
+      await toggleFavorite(secret.id);
+      setFavoriteOverride((m) => ({ ...m, [secret.id]: undefined }));
+      toast({
+        title: prev ? "Removed from favorites" : "Added to favorites",
+        description: `${secret.name} has been ${
+          prev ? "removed from" : "added to"
+        } favorites.`,
+      });
+    } catch (err) {
+      setFavoriteOverride((m) => ({ ...m, [secret.id]: prev }));
+      toast({
+        title: "Failed to update favorites",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewSecret = (secret: Secret) => {
@@ -473,14 +553,14 @@ const SecretsList = () => {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={secret.meta.isActive ? "default" : "secondary"}
+                        variant={getIsActive(secret) ? "default" : "secondary"}
                         className={
-                          secret.meta.isActive
+                          getIsActive(secret)
                             ? "bg-status-active text-white"
                             : "bg-status-inactive text-white"
                         }
                       >
-                        {secret.meta.isActive ? "Active" : "Inactive"}
+                        {getIsActive(secret) ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell>

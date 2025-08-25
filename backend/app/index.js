@@ -7,7 +7,7 @@ import logger from "../src/utils/logger.js";
 connectDB();
 
 // Define port
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 
 // Start server
 app.listen(PORT, () => {

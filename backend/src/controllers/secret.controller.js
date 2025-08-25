@@ -18,31 +18,30 @@ export const getAllSecrets = catchAsync(async (req, res, next) => {
     filter.environment = req.query.environment;
   }
 
-   if (req.query.category) {
-     filter["meta.category"] = req.query.category;
-   }
+  if (req.query.category) {
+    filter["meta.category"] = req.query.category;
+  }
 
-   if (req.query.priority) {
-     filter["meta.priority"] = req.query.priority;
-   }
+  if (req.query.priority) {
+    filter["meta.priority"] = req.query.priority;
+  }
 
-   if (req.query.strength) {
-     filter["meta.strength"] = req.query.strength;
-   }
+  if (req.query.strength) {
+    filter["meta.strength"] = req.query.strength;
+  }
 
-   if (req.query.rotationEnabled) {
-     filter["meta.rotationReminder.enabled"] =
-       req.query.rotationEnabled === "true";
-   }
+  if (req.query.rotationEnabled) {
+    filter["meta.rotationReminder.enabled"] =
+      req.query.rotationEnabled === "true";
+  }
 
-   if (req.query.rotationDue) {
-     // Find secrets due for rotation before specified date
-     filter["meta.rotationReminder.nextDue"] = {
-       $lte: new Date(req.query.rotationDue),
-     };
-   }
-  
-  
+  if (req.query.rotationDue) {
+    // Find secrets due for rotation before specified date
+    filter["meta.rotationReminder.nextDue"] = {
+      $lte: new Date(req.query.rotationDue),
+    };
+  }
+
   // Filter by tag
   if (req.query.tag) {
     filter["meta.tags"] = req.query.tag;
@@ -73,6 +72,14 @@ export const getAllSecrets = catchAsync(async (req, res, next) => {
 });
 
 export const getSecret = catchAsync(async (req, res, next) => {
+  if (!process.env.ENCRYPTION_KEY) {
+    return next(
+      new AppError(
+        "Decryption key not configured. Set ENCRYPTION_KEY in the backend environment.",
+        500
+      )
+    );
+  }
   const secret = await Secret.findById(req.params.id);
 
   if (!secret) {
@@ -85,6 +92,15 @@ export const getSecret = catchAsync(async (req, res, next) => {
   // Create a response object with the decrypted value
   const secretWithValue = secret.toObject();
   secretWithValue.value = secret.value; // This uses the virtual getter
+
+  if (secretWithValue.value === null) {
+    return next(
+      new AppError(
+        "Failed to decrypt secret value. The ENCRYPTION_KEY is missing or incorrect.",
+        500
+      )
+    );
+  }
 
   // Remove encrypted fields from response
   delete secretWithValue.encryptedValue;
