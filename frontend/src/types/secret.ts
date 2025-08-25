@@ -27,6 +27,22 @@ export interface Secret {
     lastAccessed?: Date;
     accessCount?: number;
     version?: number;
+    // Extended metadata fields
+    category?: string; // e.g., database, auth, api
+    priority?: "low" | "medium" | "high" | "critical";
+    strength?: "weak" | "moderate" | "strong"; // qualitative assessment of secret robustness
+    rotationReminder?: {
+      enabled: boolean;
+      intervalDays: number;
+      lastRotated?: Date;
+      nextDue?: Date;
+    };
+    personalNotes?: string;
+    quickCopyFormat?: "env" | "json" | "identifier"; // preferred default copy format
+    usagePattern?: {
+      frequency: "daily" | "weekly" | "monthly" | "rare";
+      lastUsedInProject?: string;
+    };
   };
   history?: SecretHistory[];
 }

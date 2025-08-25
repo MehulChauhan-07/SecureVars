@@ -18,6 +18,10 @@ import {
   PowerOff,
   Eye,
   EyeOff,
+  Star,
+  RotateCcw,
+  Shield,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
 import { SecretFormDialog } from "@/components/secret/SecretFormDialog";
@@ -26,7 +30,8 @@ import { useToast } from "@/hooks/use-toast";
 const SecretDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { secrets, deleteSecret, toggleSecretStatus } = useSecrets();
+  const { secrets, deleteSecret, toggleSecretStatus, toggleFavorite } =
+    useSecrets();
   const { toast } = useToast();
   const [showValue, setShowValue] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -94,6 +99,45 @@ const SecretDetail = () => {
     });
   };
 
+  const handleToggleFavorite = () => {
+    toggleFavorite(secret.id);
+    toast({
+      title: secret.meta.isFavorite ? "Removed favorite" : "Marked favorite",
+      description: `${secret.name} ${
+        secret.meta.isFavorite ? "removed from" : "added to"
+      } favorites.`,
+    });
+  };
+
+  const getPriorityStyles = (priority?: string) => {
+    switch (priority) {
+      case "critical":
+        return "bg-red-500 text-white";
+      case "high":
+        return "bg-orange-500 text-white";
+      case "medium":
+        return "bg-amber-500 text-white";
+      case "low":
+        return "bg-green-600 text-white";
+      default:
+        return "bg-muted text-foreground";
+    }
+  };
+
+  const computeQuickCopy = () => {
+    const fmt = secret.meta.quickCopyFormat;
+    switch (fmt) {
+      case "env":
+        return `${secret.identifier}=${secret.value}`;
+      case "json":
+        return JSON.stringify({ [secret.identifier]: secret.value }, null, 2);
+      case "identifier":
+        return secret.identifier;
+      default:
+        return secret.value;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -117,6 +161,18 @@ const SecretDetail = () => {
         </div>
 
         <div className="flex items-center space-x-2">
+          <Button
+            variant={secret.meta.isFavorite ? "default" : "outline"}
+            size="icon"
+            onClick={handleToggleFavorite}
+            title={secret.meta.isFavorite ? "Unfavorite" : "Favorite"}
+          >
+            <Star
+              className={`h-4 w-4 ${
+                secret.meta.isFavorite ? "fill-yellow-400 text-yellow-400" : ""
+              }`}
+            />
+          </Button>
           <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -196,6 +252,20 @@ const SecretDetail = () => {
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
+                {secret.meta.quickCopyFormat && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      copyToClipboard(
+                        computeQuickCopy(),
+                        `Quick copy (${secret.meta.quickCopyFormat})`
+                      )
+                    }
+                  >
+                    <Activity className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -243,6 +313,82 @@ const SecretDetail = () => {
               </Badge>
             </div>
 
+            {secret.meta.category && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Category</label>
+                <Badge variant="outline" className="text-xs">
+                  {secret.meta.category}
+                </Badge>
+              </div>
+            )}
+
+            {secret.meta.priority && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Priority</label>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={`text-xs ${getPriorityStyles(
+                      secret.meta.priority
+                    )}`}
+                  >
+                    {secret.meta.priority}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {secret.meta.strength && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-1">
+                  Strength <Shield className="h-3 w-3" />
+                </label>
+                <p className="text-sm capitalize">{secret.meta.strength}</p>
+              </div>
+            )}
+
+            {secret.meta.rotationReminder?.enabled && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-1">
+                  Rotation <RotateCcw className="h-3 w-3" />
+                </label>
+                <div className="text-xs space-y-1">
+                  <p>
+                    Interval: {secret.meta.rotationReminder.intervalDays} days
+                  </p>
+                  {secret.meta.rotationReminder.lastRotated && (
+                    <p>
+                      Last:{" "}
+                      {new Date(
+                        secret.meta.rotationReminder.lastRotated
+                      ).toLocaleDateString()}
+                    </p>
+                  )}
+                  {secret.meta.rotationReminder.nextDue && (
+                    <p>
+                      Next Due:{" "}
+                      {new Date(
+                        secret.meta.rotationReminder.nextDue
+                      ).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {secret.meta.usagePattern && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Usage Pattern</label>
+                <div className="text-xs space-y-1">
+                  <p>Frequency: {secret.meta.usagePattern.frequency}</p>
+                  {secret.meta.usagePattern.lastUsedInProject && (
+                    <p>
+                      Last Used In: {secret.meta.usagePattern.lastUsedInProject}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {secret.meta.tags.length > 0 && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tags</label>
@@ -274,6 +420,22 @@ const SecretDetail = () => {
           </CardContent>
         </Card>
       </div>
+
+      {secret.meta.personalNotes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Personal Notes</CardTitle>
+            <CardDescription>
+              Private notes about handling this secret
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm whitespace-pre-wrap">
+              {secret.meta.personalNotes}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Edit Dialog */}
       <SecretFormDialog
