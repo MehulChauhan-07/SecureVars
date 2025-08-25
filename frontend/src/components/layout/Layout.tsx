@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, Link } from "react-router-dom";
 import { Shield, Home, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -20,9 +20,9 @@ const Layout = () => {
             <div className="flex items-center space-x-8">
               <div className="flex items-center space-x-3">
                 <Shield className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-bold text-foreground">
-                  Secret Manager
-                </h1>
+                <Link to="/" className="text-2xl font-bold text-foreground">
+                  SecretVars
+                </Link>
               </div>
 
               <nav className="flex items-center space-x-6">
