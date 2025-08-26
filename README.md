@@ -4,6 +4,34 @@ Full‑stack Secret Management application (backend: Node/Express/Mongo, fronten
 
 ---
 
+## Quick Navigation
+
+| Section                    | Link                                     |
+| -------------------------- | ---------------------------------------- |
+| 1. Core Features           | [Go](#1-core-features)                   |
+| 2. Tech Stack              | [Go](#2-tech-stack)                      |
+| 3. High-Level Architecture | [Go](#3-high-level-architecture)         |
+| 4. Data Flow Overview      | [Go](#4-data-flow-overview)              |
+| 5. Security Model          | [Go](#5-security-model)                  |
+| 6. Environment Variables   | [Go](#6-environment-variables-backend)   |
+| 7. Data Models             | [Go](#7-data-models-current)             |
+| 8. Encryption Lifecycle    | [Go](#8-encryption-lifecycle)            |
+| 9. API Endpoint Summary    | [Go](#9-api-endpoint-summary-key)        |
+| 10. Frontend Structure     | [Go](#10-frontend-structure-highlights)  |
+| 11. Authentication Flow    | [Go](#11-authentication-flow-sequence)   |
+| 12. Secret Lifecycle       | [Go](#12-secret-lifecycle-detailed)      |
+| 13. Running Locally        | [Go](#13-running-locally)                |
+| 14. Development Guidelines | [Go](#14-development-guidelines)         |
+| 15. Migration Plan         | [Go](#15-migration-plan-v2-models)       |
+| 16. Production Hardening   | [Go](#16-production-hardening-checklist) |
+| 17. Troubleshooting        | [Go](#17-troubleshooting)                |
+| 18. Roadmap                | [Go](#18-roadmap-proposed)               |
+| 19. Contributing           | [Go](#19-contributing-internal)          |
+| 20. License                | [Go](#20-license)                        |
+| 21. Quick Commands         | [Go](#21-quick-command-reference)        |
+
+---
+
 ## 1. Core Features
 
 - Master password–secured system (single administrative user)
