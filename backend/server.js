@@ -153,6 +153,7 @@ app.use((req, res) => {
     message: `Can't find ${req.originalUrl} on this server!`,
   });
 });
+console.log("All routes initialized");
 
 // Global error handler
 app.use((err, req, res, next) => {

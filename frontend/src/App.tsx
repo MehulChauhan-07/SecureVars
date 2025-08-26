@@ -2,7 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import { SecretsProvider } from "@/contexts/SecretsProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -36,31 +40,52 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AppRoutes = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="secrets" element={<SecretsList />} />
-          <Route path="secrets/:id" element={<SecretDetail />} />
-          <Route path="compare" element={<EnvCompare />} />
-        </Route>
-
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  );
-};
+// Create router with future flags
+const router = createBrowserRouter(
+  [
+    {
+      path: "/login",
+      element: <Login />,
+    },
+    {
+      path: "/",
+      element: (
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <Dashboard />,
+        },
+        {
+          path: "secrets",
+          element: <SecretsList />,
+        },
+        {
+          path: "secrets/:id",
+          element: <SecretDetail />,
+        },
+        {
+          path: "compare",
+          element: <EnvCompare />,
+        },
+      ],
+    },
+    {
+      path: "*",
+      element: <NotFound />,
+    },
+  ],
+  {
+    future: {
+      // Use only supported future flags for your react-router-dom version
+      v7_normalizeFormMethod: true,
+      v7_relativeSplatPath: true,
+    },
+  }
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -75,7 +100,7 @@ const App = () => (
           <SecretsProvider>
             <Toaster />
             <Sonner />
-            <AppRoutes />
+            <RouterProvider router={router} />
           </SecretsProvider>
         </AuthProvider>
       </TooltipProvider>

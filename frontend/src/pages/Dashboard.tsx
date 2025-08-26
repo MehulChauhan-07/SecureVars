@@ -1,4 +1,7 @@
-import { useSecrets } from "@/contexts/SecretsContext";
+import { ImportExportDialog } from "@/components/secret/ImportExportDialog";
+import { SecretFormDialog } from "@/components/secret/SecretFormDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,17 +9,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Database, Shield, Activity, Clock, Search, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useSecrets } from "@/contexts/SecretsContext";
 import { Secret } from "@/types/secret";
+import {
+  Activity,
+  ArrowDownUp,
+  Clock,
+  Database,
+  Eye,
+  Plus,
+  Search,
+  Shield,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const { secrets, recentlyAccessed, isLoading, error } = useSecrets();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showImportExport, setShowImportExport] = useState(false);
 
   const stats = useMemo(() => {
     const active = secrets.filter((s) => s.meta.isActive).length;
@@ -54,11 +67,30 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          Overview of your secrets and environment variables
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Overview of your secrets and environment variables
+          </p>
+        </div>
+        <div className="flex space-x-2">
+          <Button
+            onClick={() => setShowAddDialog(true)}
+            className="flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Secret</span>
+          </Button>
+          <Button
+            onClick={() => setShowImportExport(true)}
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <ArrowDownUp className="h-4 w-4" />
+            <span>Import/Export</span>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -217,6 +249,32 @@ const Dashboard = () => {
                 )}
               </div>
             )}
+
+            {/* View All Results Link */}
+            {searchQuery && filteredSecrets.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <Button asChild variant="ghost" size="sm" className="w-full">
+                  <Link to={`/secrets?q=${encodeURIComponent(searchQuery)}`}>
+                    View All Results (
+                    {
+                      secrets.filter(
+                        (secret) =>
+                          secret.name
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) ||
+                          secret.identifier
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) ||
+                          secret.project.name
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase())
+                      ).length
+                    }
+                    )
+                  </Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -294,6 +352,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      <SecretFormDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
+      <ImportExportDialog
+        open={showImportExport}
+        onOpenChange={setShowImportExport}
+      />
     </div>
   );
 };
