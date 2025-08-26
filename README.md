@@ -262,6 +262,9 @@ Failure mode: missing ENCRYPTION_KEY → decryption returns null (value not expo
 
 ---
 
+<details>
+<summary><strong>9. API Endpoint Summary (click to expand)</strong></summary>
+
 ## 9. API Endpoint Summary (Key)
 
 | Method | Path                             | Description                      | Auth                   |
@@ -288,6 +291,8 @@ Failure mode: missing ENCRYPTION_KEY → decryption returns null (value not expo
 | POST   | /api/import-export/json          | Import JSON                      | Yes                    |
 | GET    | /api/import-export/json          | Export JSON                      | Yes                    |
 | GET    | /api/import-export/csv           | Export CSV                       | Yes                    |
+
+</details>
 
 ---
 
