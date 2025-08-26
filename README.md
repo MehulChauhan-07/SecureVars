@@ -127,6 +127,9 @@ node backend/resetMasterPassword.js
 
 ## 2. Tech Stack
 
+<details>
+<summary><b>Click to expand/collapse technology details</b></summary>
+
 | Layer     | Tech                                                          |
 | --------- | ------------------------------------------------------------- |
 | Backend   | Node.js (ESM), Express 5, Mongoose 8, JWT, bcryptjs           |
@@ -134,6 +137,7 @@ node backend/resetMasterPassword.js
 | Frontend  | React 18 + Vite, TypeScript, Tailwind, shadcn/ui, React Query |
 | Build/Dev | pnpm / npm, scripts, Axios, ESLint                            |
 | Logging   | winston                                                       |
+</details>
 
 ---
 
@@ -184,6 +188,9 @@ Tokens managed via secure HTTP-only cookies (no localStorage). Encryption handle
 
 ## 5. Security Model
 
+<details>
+<summary><b>Click to expand/collapse Security Model details</b></summary>
+
 | Aspect                    | Detail                                                                                               |
 | ------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Master Password           | Single admin credential; bcrypt hash persisted in `.env`                                             |
@@ -191,6 +198,7 @@ Tokens managed via secure HTTP-only cookies (no localStorage). Encryption handle
 | Encryption Fields         | `encryptedValue`, `iv`, `authTag` per secret & history record                                        |
 | Token Transport           | HTTP-only, SameSite cookies; CORS `credentials: true`                                                |
 | Attack Surface Mitigation | Rate limiting on auth, centralized error handling, input trimming, identifier uniqueness per project |
+</details>
 
 Plaintext secret value _never_ stored—only transient in memory until encrypted.
 
@@ -262,10 +270,10 @@ Failure mode: missing ENCRYPTION_KEY → decryption returns null (value not expo
 
 ---
 
-<details>
-<summary><strong>9. API Endpoint Summary (click to expand)</strong></summary>
-
 ## 9. API Endpoint Summary (Key)
+
+<details>
+<summary><b>Click to expand/collapse API Endpoints table</b></summary>
 
 | Method | Path                             | Description                      | Auth                   |
 | ------ | -------------------------------- | -------------------------------- | ---------------------- |
@@ -291,7 +299,6 @@ Failure mode: missing ENCRYPTION_KEY → decryption returns null (value not expo
 | POST   | /api/import-export/json          | Import JSON                      | Yes                    |
 | GET    | /api/import-export/json          | Export JSON                      | Yes                    |
 | GET    | /api/import-export/csv           | Export CSV                       | Yes                    |
-
 </details>
 
 ---
@@ -420,6 +427,9 @@ Migration Steps:
 
 ## 17. Troubleshooting
 
+<details>
+<summary><b>Click to expand/collapse common issues and solutions</b></summary>
+
 | Symptom                               | Likely Cause                           | Resolution                                                        |
 | ------------------------------------- | -------------------------------------- | ----------------------------------------------------------------- |
 | 401 on every request                  | Missing cookies / CORS credentials off | Ensure `withCredentials: true` & backend CORS `credentials: true` |
@@ -427,6 +437,7 @@ Migration Steps:
 | Token not refreshing                  | refresh endpoint blocked by CORS       | Confirm origin list includes frontend URL                         |
 | Decryption returns null               | Wrong ENCRYPTION_KEY / corrupted data  | Verify key & stored fields                                        |
 | Duplicate identifier error            | Same project+identifier exists         | Change identifier or project                                      |
+</details>
 
 ---
 
