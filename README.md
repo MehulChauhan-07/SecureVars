@@ -137,6 +137,7 @@ node backend/resetMasterPassword.js
 | Frontend  | React 18 + Vite, TypeScript, Tailwind, shadcn/ui, React Query |
 | Build/Dev | pnpm / npm, scripts, Axios, ESLint                            |
 | Logging   | winston                                                       |
+
 </details>
 
 ---
@@ -198,6 +199,7 @@ Tokens managed via secure HTTP-only cookies (no localStorage). Encryption handle
 | Encryption Fields         | `encryptedValue`, `iv`, `authTag` per secret & history record                                        |
 | Token Transport           | HTTP-only, SameSite cookies; CORS `credentials: true`                                                |
 | Attack Surface Mitigation | Rate limiting on auth, centralized error handling, input trimming, identifier uniqueness per project |
+
 </details>
 
 Plaintext secret value _never_ stored—only transient in memory until encrypted.
@@ -299,6 +301,7 @@ Failure mode: missing ENCRYPTION_KEY → decryption returns null (value not expo
 | POST   | /api/import-export/json          | Import JSON                      | Yes                    |
 | GET    | /api/import-export/json          | Export JSON                      | Yes                    |
 | GET    | /api/import-export/csv           | Export CSV                       | Yes                    |
+
 </details>
 
 ---
@@ -437,6 +440,7 @@ Migration Steps:
 | Token not refreshing                  | refresh endpoint blocked by CORS       | Confirm origin list includes frontend URL                         |
 | Decryption returns null               | Wrong ENCRYPTION_KEY / corrupted data  | Verify key & stored fields                                        |
 | Duplicate identifier error            | Same project+identifier exists         | Change identifier or project                                      |
+
 </details>
 
 ---
