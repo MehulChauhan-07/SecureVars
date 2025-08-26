@@ -1,34 +1,112 @@
 # SecureVars
 
+![Status](https://img.shields.io/badge/status-active-success) ![Node](https://img.shields.io/badge/node-%3E=18.0-green) ![License](https://img.shields.io/badge/license-TBD-lightgrey) ![PRs](https://img.shields.io/badge/PRs-welcome-blue) ![Security](https://img.shields.io/badge/encryption-AES--GCM-important)
+
 Full‑stack Secret Management application (backend: Node/Express/Mongo, frontend: React + Vite + TypeScript + shadcn/ui) providing encrypted storage, version history, rotation reminders, import/export, and environment comparison.
+
+> Security Notice: The master password cannot be recovered. If lost, you must re‑initialize and re‑import secrets. Plaintext secret values are never stored—only transiently in memory until encryption.
 
 ---
 
 ## Quick Navigation
 
-| Section                    | Link                                     |
-| -------------------------- | ---------------------------------------- |
-| 1. Core Features           | [Go](#1-core-features)                   |
-| 2. Tech Stack              | [Go](#2-tech-stack)                      |
-| 3. High-Level Architecture | [Go](#3-high-level-architecture)         |
-| 4. Data Flow Overview      | [Go](#4-data-flow-overview)              |
-| 5. Security Model          | [Go](#5-security-model)                  |
-| 6. Environment Variables   | [Go](#6-environment-variables-backend)   |
-| 7. Data Models             | [Go](#7-data-models-current)             |
-| 8. Encryption Lifecycle    | [Go](#8-encryption-lifecycle)            |
-| 9. API Endpoint Summary    | [Go](#9-api-endpoint-summary-key)        |
-| 10. Frontend Structure     | [Go](#10-frontend-structure-highlights)  |
-| 11. Authentication Flow    | [Go](#11-authentication-flow-sequence)   |
-| 12. Secret Lifecycle       | [Go](#12-secret-lifecycle-detailed)      |
-| 13. Running Locally        | [Go](#13-running-locally)                |
-| 14. Development Guidelines | [Go](#14-development-guidelines)         |
-| 15. Migration Plan         | [Go](#15-migration-plan-v2-models)       |
-| 16. Production Hardening   | [Go](#16-production-hardening-checklist) |
-| 17. Troubleshooting        | [Go](#17-troubleshooting)                |
-| 18. Roadmap                | [Go](#18-roadmap-proposed)               |
-| 19. Contributing           | [Go](#19-contributing-internal)          |
-| 20. License                | [Go](#20-license)                        |
-| 21. Quick Commands         | [Go](#21-quick-command-reference)        |
+| Section                     | Link                                     |
+| --------------------------- | ---------------------------------------- |
+| 0. Why SecureVars           | [Go](#0-why-securevars)                  |
+| Quick Start                 | [Go](#quick-start)                       |
+| Quick Commands              | [Go](#quick-commands)                    |
+| 1. Core Features            | [Go](#1-core-features)                   |
+| 2. Tech Stack               | [Go](#2-tech-stack)                      |
+| 3. High-Level Architecture  | [Go](#3-high-level-architecture)         |
+| 4. Data Flow Overview       | [Go](#4-data-flow-overview)              |
+| 5. Security Model           | [Go](#5-security-model)                  |
+| 6. Environment Variables    | [Go](#6-environment-variables-backend)   |
+| 7. Data Models              | [Go](#7-data-models-current)             |
+| 8. Encryption Lifecycle     | [Go](#8-encryption-lifecycle)            |
+| 9. API Endpoint Summary     | [Go](#9-api-endpoint-summary-key)        |
+| 10. Frontend Structure      | [Go](#10-frontend-structure-highlights)  |
+| 11. Authentication Flow     | [Go](#11-authentication-flow-sequence)   |
+| 12. Secret Lifecycle        | [Go](#12-secret-lifecycle-detailed)      |
+| 13. Running Locally         | [Go](#13-running-locally)                |
+| 14. Development Guidelines  | [Go](#14-development-guidelines)         |
+| 15. Migration Plan          | [Go](#15-migration-plan-v2-models)       |
+| 16. Production Hardening    | [Go](#16-production-hardening-checklist) |
+| 17. Troubleshooting         | [Go](#17-troubleshooting)                |
+| 18. Roadmap                 | [Go](#18-roadmap-proposed)               |
+| 19. Contributing            | [Go](#19-contributing-internal)          |
+| 20. License                 | [Go](#20-license)                        |
+| 21. Quick Command Reference | [Go](#21-quick-command-reference)        |
+
+## 0. Why SecureVars
+
+Traditional .env files and ad‑hoc secret sharing (chat, email) create drift, lack auditability, and risk exposure. SecureVars focuses on:
+
+- Developer velocity: Import/export, quick copy formats, environment diff.
+- Operational safety: Version history & rollback, rotation reminders.
+- Security posture: AES‑GCM encryption at rest, HTTP‑only cookie auth.
+- Clarity: Rich metadata (priority, category, usage) for triage & audits.
+- Extensibility: Planned multi-user, API keys, rotation automation.
+
+If you outgrow plain dotenv but aren’t ready for a full enterprise vault—this fills the gap.
+
+## Quick Start
+
+```bash
+# Clone
+git clone <your-repo-url> SecureVars
+cd SecureVars
+
+# Backend env
+cp backend/.env.example backend/.env   # or create manually (see section 6)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" # generate ENCRYPTION_KEY
+
+# Install (can use npm or pnpm)
+cd backend && npm install
+cd ../frontend && npm install
+
+# Run both (Windows)
+../start-dev.bat
+# or *nix
+../start-dev.sh
+
+# Open frontend and set master password
+open http://localhost:5173  # (or manually in browser)
+```
+
+### First Secret via API (example)
+
+```bash
+curl -X POST http://localhost:4000/api/auth/login \
+   -H 'Content-Type: application/json' \
+   -d '{"password":"YourStrongPass!"}' -c cookies.txt
+
+curl -X POST http://localhost:4000/api/secrets \
+   -H 'Content-Type: application/json' -b cookies.txt \
+   -d '{
+      "name":"Stripe API Key",
+      "identifier":"STRIPE_API_KEY",
+      "value":"sk_live_xxx",
+      "project": {"name":"E-commerce API"},
+      "environment":"production",
+      "meta": {"tags":["payment","stripe"],"priority":"high"}
+   }'
+```
+
+---
+
+## Quick Commands
+
+```bash
+# Generate encryption key
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# (Planned) Reset master password script
+node backend/resetMasterPassword.js
+```
+
+---
+
+<!-- Navigation table consolidated above -->
 
 ---
 
